@@ -21,6 +21,7 @@ library(fresh)
 library(DT)
 library(shinyWidgets)
 library(ggnewscale)
+
 ui <- dashboardPage(
   title = "Kucing Kurus",
   dashboardHeader(
@@ -40,7 +41,7 @@ ui <- dashboardPage(
     tabItems(
       tabItem(tabName = "dashboardP2",
               fluidRow(
-                box(title = strong("Dashboard consignment Note 2022"), status = "info", strong("kucingkurusmandi"), p("di papan"), width = 12)
+                box(title = strong("Dashboard Penindakan dan Penyidikan 2022"), status = "info", strong("kucingkurusmandi"), p("di papan"), width = 12)
               )),
       tabItem(tabName = "tabelSBP2021",
             fluidRow(
@@ -57,7 +58,7 @@ ui <- dashboardPage(
 server <- function(input, output, session) {
  #load data
   #sbp
-  sbp2021 <- read_csv2("D:/OneDrive/Pribadi/Benkyou/data science/Dashboard_Project/siPeDa/Databases/sbp_2021.csv")
+  sbp2021 <- read_csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/sbp_2021.csv")
   
   #panggil data esbepe
   

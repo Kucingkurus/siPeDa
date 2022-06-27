@@ -32,6 +32,7 @@ ui <- dashboardPage(
     menuItem("Dashboard P2", tabName = "dashboardP2", icon = icon("archway",lib = "font-awesome")),
     menuItem("Detail", tabName = "detail", icon=icon("database"),
       menuItem("SBP 2021", tabName = "tabelSBP2021",icon=icon("users")),
+      menuItem("SBP 2022", tabName = "tabelSBP2022", icon = icon("users")),
       menuItem("Penjaluran", tabName = "penjaluran", icon = icon("code-branch")),
       menuItem("Bongkaran", tabName = "bongkaran",icon = icon("box-open"))
       )
@@ -59,6 +60,7 @@ server <- function(input, output, session) {
  #load data
   #sbp
   sbp2021 <- read_csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/sbp_2021.csv")
+  sbp2022 <- read.csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/SBP_2022.csv")
   
   #panggil data esbepe
   

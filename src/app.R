@@ -21,9 +21,9 @@ library(shinyWidgets)
 library(ggnewscale)
 
 ui <- dashboardPage(
-  title = "Kucing Kurus",
+  title = "Dashboard P2",
   dashboardHeader(
-    title = "Kucing Kurus"
+    title = "Dashboard P2"
   ),
   dashboardSidebar(
     sidebarMenu(id = "sidebar",
@@ -38,10 +38,13 @@ ui <- dashboardPage(
   ),
   dashboardBody(
     tabItems(
+      ##dashboard utama
       tabItem(tabName = "dashboardP2",
               fluidRow(
                 box(title = strong("Dashboard Penindakan dan Penyidikan 2022"), status = "info", strong("kucingkurusmandi"), p("di papan"), width = 12),
-                box(title = "Trend SBP 2022", status = "primary", width = 12, plotlyOutput("trendSBP2022"))
+                box(title = "SBP 2022", status = "primary", width = 6, plotlyOutput("negaraAsalSBP2022")),
+                box(title = "penjaluran", status = "success", width = 6, plotlyOutput("progresPenjaluran")),
+                box(title =  "BA Bongkaran", status = "info", width = 6, plotlyOutput("volumeBongkaran"))
               )),
       tabItem(tabName = "tabelSBP2022",
             fluidRow(
@@ -57,25 +60,52 @@ ui <- dashboardPage(
 
 server <- function(input, output, session) {
  #load data
-  #sbp
+  
   ## sbp2021 <- read_csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/sbp_2021.csv")
+  
   sbp2022 <- read.csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/SBP_2022.csv") %>%
     clean_names()
   
-  #panggil data esbepe
+  penjaluran <- read.csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/jumlah_penjaluran.csv") %>%
+    clean_names()
+  
+  dataBongkar <- read.csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/ba_bongkar.csv") %>%
+    clean_names()
+  
+  #panggil data sbp untuk menjadi tabel 
   
   output$tabelSBP2022 <- renderDataTable({sbp2022})
   
+  ## mengambil data untuk pie-chart negara asal
   negaraAsal <- sbp2022 %>%
     group_by(negara_asal) %>%
     count() %>%
     drop_na()
   
-  output$trendSBP2022 <- renderPlotly({
+  ## membuat tabel pie chart menggunakan plot_ly
+  
+  output$negaraAsalSBP2022 <- renderPlotly({
     
-    ggplot(negaraAsal, aes(x="", y=n, fill=negara_asal)) +
-      geom_bar(stat="identity", width=1) +
-      coord_polar("y", start=0)
+    plot_ly(negaraAsal, labels = ~ negara_asal, values = ~n, type = "pie") %>%
+      layout(title = 'Negara asal paket yang ditegah',
+             xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+             yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+  })
+  
+  #line chart penjaluran
+  
+  output$progresPenjaluran <- renderPlotly({
+    plot_ly(penjaluran, x = ~ tanggal) %>%
+      add_trace(y= ~total_hijau, name = 'jumlah cn', type = 'scatter', mode = 'lines', line = list(color = 'rgb(124, 252, 0)'))
+  })
+  
+  #line chart bongkaran
+  
+  volumeBongkar <- aggregate(dataBongkar["total"], by=dataBongkar["tanggal_ba_buka_segel"], sum)
+  
+  output$volumeBongkaran <- renderPlotly({
+    plot_ly(volumeBongkar, x = ~ tanggal_ba_buka_segel) %>%
+      add_trace(y= ~total, name = 'Volume Bongkaran', type = 'scatter', mode = 'lines', line = list(color = 'rgb(124, 252, 0)'))
   })
 }
 

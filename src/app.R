@@ -41,27 +41,32 @@ ui <- dashboardPage(
       ##dashboard utama
       tabItem(tabName = "dashboardP2",
               fluidRow(
-                box(title = strong("Dashboard Penindakan dan Penyidikan 2022"), status = "info", strong("kucingkurusmandi"), p("di papan"), width = 12),
+               ## box(title = strong("Dashboard Penindakan dan Penyidikan 2022"), status = "info", strong("kucingkurusmandi"), p("di papan"), width = 12),
                 ### laporan Bongkar
                 box(title = strong("Laporan Bongkar"), status = "info", width = 12),
                 box(title =  "BA Bongkaran", status = "info", width = 12, plotlyOutput("volumeBongkaran")),
                 box(title = "keterangan", status = "info", width = 12, strong("asal"),plotlyOutput("render_jml_bkr_asal")),
-                box(title = "datarange tanggal tes", status = "info", width = 3, dateRangeInput("dateRange1", "tanggal:",
-                                                                                              start = Sys.Date(),
-                                                                                              end = Sys.Date(),
-                                                                                              min = "2022-01-01",
-                                                                                              max = Sys.Date(),
-                                                                                              format = "yyyy-mm-dd",
-                                                                                              separator = "-")),
+                
+                ##box(title = "datarange tanggal tes", status = "info", width = 3, dateRangeInput("dateRange1", "tanggal:",
+                ##                                                                              start = Sys.Date(),
+                ##                                                                              end = Sys.Date(),
+                ##                                                                              min = "2022-01-01",
+                ##                                                                              max = Sys.Date(),
+                ##                                                                              format = "yyyy-mm-dd",
+                ##                                                                              separator = "-")),
+                
+                ### Laporan SBP
+                box(title = strong("Jumlah SBP"), status = "info", width = 12),
+                box(title = "SBP 2022", status = "primary", width = 6, plotlyOutput("negaraAsalSBP2022")),
+                box(title = "SBP by kategori", status = "primary", width = 6, plotlyOutput("kategoriSBP2022")),
+                box(title = "jumlah SBP", status = "info", width = 3, strong("NON NPP"), valueBoxOutput("jml_sbp_non"), strong("NPP"), valueBoxOutput("jml_sbp_npp")),
+                
                 ### laporan pemeriksaan
                 box(title = strong("Laporan Pemeriksaan"), status = "info", width = 12),
                 box(title = "penjaluran", status = "success", width = 6, plotlyOutput("progresPenjaluran")),
                 ### laporan pengajuan LAb
-                box(title = strong("Laporan Pengajuan lab"), status = "info", width = 12),
-                ### laporan SBP
-                box(title = strong("Jumlah SBP"), status = "info", width = 12),
-                box(title = "SBP 2022", status = "primary", width = 6, plotlyOutput("negaraAsalSBP2022")),
-                box(title = "jumlah SBP", status = "info", width = 3, strong("NON NPP"), valueBoxOutput("jml_sbp_non"), strong("NPP"), valueBoxOutput("jml_sbp_npp"))
+                box(title = strong("Laporan Pengajuan lab"), status = "info", width = 12)
+                
               )),
       tabItem(tabName = "tabelSBP2022",
             fluidRow(
@@ -78,31 +83,33 @@ ui <- dashboardPage(
 server <- function(input, output, session) {
  #load data
   
-  sbp2022 <- read.csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/SBP_2022.csv") %>%
+  sbp2022 <- read.csv2("databases/SBP_2022.csv") %>%
     clean_names()
   
-  penjaluran <- read.csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/jumlah_penjaluran.csv") %>%
+  penjaluran <- read.csv2("databases/jumlah_penjaluran.csv") %>%
     clean_names()
   
-  dataBongkar <- read.csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/ba_bongkar.csv") %>%
+  dataBongkar <- read.csv2("databases/ba_bongkar.csv") %>%
     clean_names() %>%
     mutate(tanggal_ba_buka_segel = as.Date(tanggal_ba_buka_segel)) %>%
     mutate(berat = as.integer(berat))
   
-  dataTangkapan <- read.csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/data_tangkapan.csv") %>%
+  dataTangkapan <- read.csv2("databases/data_tangkapan.csv") %>%
     clean_names()
 
   #panggil data sbp untuk menjadi tabel 
   
   output$tabelSBP2022 <- renderDataTable({sbp2022})
   
-  ## mengambil data untuk pie-chart negara asal
+  ##PIE CHART SBP BY NEGARA ASAL
+  
+  ### mengambil data untuk pie-chart negara asal
   negaraAsal <- sbp2022 %>%
     group_by(negara_asal) %>%
     count() %>%
     drop_na()
   
-  ## membuat tabel pie chart menggunakan plot_ly
+  ### membuat tabel pie chart menggunakan plot_ly
   
   output$negaraAsalSBP2022 <- renderPlotly({
     
@@ -112,6 +119,22 @@ server <- function(input, output, session) {
              yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
   })
   
+  ##PIE CHART SBP BY KATEGORI
+  ###MENGAMBIL DATA SBP BY KATEGORI
+  kategoriSBP <- sbp2022 %>%
+    group_by(kategori) %>%
+    count() %>%
+    drop_na()
+  
+  ###MEMBUAT TABEL PIE CHART BY KATEGORI
+  output$kategoriSBP2022 <- renderPlotly({
+    
+    plot_ly(kategoriSBP, labels = ~ kategori, values = ~n, type = "pie") %>%
+      layout(title = 'Kategori paket yang ditegah',
+             xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+             yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+  
+  })
   #line chart penjaluran
   
   output$progresPenjaluran <- renderPlotly({

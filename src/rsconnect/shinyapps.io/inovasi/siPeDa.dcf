@@ -1,0 +1,14 @@
+name: siPeDa
+title: siPeDa
+username:
+account: inovasi
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7226370
+bundleId: 6374207
+url: https://inovasi.shinyapps.io/siPeDa/
+when: 1665027726.21526
+lastSyncTime: 1665027726.21528
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: example/punya_nanda.R|UntitledR.R

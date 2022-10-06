@@ -1,0 +1,14 @@
+name: siPeDa
+title: siPeDa
+username:
+account: kucingkurus
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 7226261
+bundleId: 6374134
+url: https://kucingkurus.shinyapps.io/siPeDa/
+when: 1665025945.54652
+lastSyncTime: 1665025945.54653
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: example/punya_nanda.R|UntitledR.R

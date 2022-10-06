@@ -21,7 +21,7 @@ library(shinyWidgets)
 library(ggnewscale)
 
 
-sbp2022 <- read_csv2("/home/kucingkurus/Documents/Web Development/siPeDa/Databases/SBP_2022.csv") %>%
+sbp2022 <- read_csv2("../Databases/SBP_2022.csv") %>%
   clean_names()
 
 negaraAsal <- sbp2022 %>%

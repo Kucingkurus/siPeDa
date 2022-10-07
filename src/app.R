@@ -19,6 +19,8 @@ library(fresh)
 library(DT)
 library(shinyWidgets)
 library(ggnewscale)
+library(RMySQL)
+library(DBI)
 
 ui <- dashboardPage(
   title = "Dashboard P2",
@@ -83,16 +85,39 @@ ui <- dashboardPage(
 server <- function(input, output, session) {
  #load data
   
-  sbp2022 <- read.csv2("databases/SBP_2022.csv") %>%
+  ## Load data SQL
+  
+  ### login data sql
+  
+  con = dbConnect(RMySQL::MySQL(),
+                  dbname='P2_pasbar',
+                  host='103.187.146.198',
+                  port=3306,
+                  user='kucingkurus',
+                  password='Kuc1ngkuru5')
+  
+  ### load data sbp dari server sql
+  sbp2022 <- dbReadTable(con, "SBP_2022") %>%
     clean_names()
+  ### laod data bongkaran dari server sql
+  dataBongkar <- dbReadTable(con, "ba_bongkar") %>%
+    clean_names() %>%
+    mutate(tanggal_ba_buka_segel = as.Date(tanggal_ba_buka_segel)) %>%
+    mutate(x_berat = as.numeric(x_berat)) %>%
+    mutate(total = as.integer(total))
+  
+  ##Load data CSV
+  
+ # sbp2022 <- read.csv2("databases/SBP_2022.csv") %>%
+   # clean_names()
   
   penjaluran <- read.csv2("databases/jumlah_penjaluran.csv") %>%
     clean_names()
   
-  dataBongkar <- read.csv2("databases/ba_bongkar.csv") %>%
-    clean_names() %>%
-    mutate(tanggal_ba_buka_segel = as.Date(tanggal_ba_buka_segel)) %>%
-    mutate(berat = as.integer(berat))
+#dataBongkar <- read.csv2("databases/ba_bongkar.csv") %>%
+ #   clean_names() %>%
+  #  mutate(tanggal_ba_buka_segel = as.Date(tanggal_ba_buka_segel)) %>%
+   # mutate(berat = as.integer(berat))
   
   dataTangkapan <- read.csv2("databases/data_tangkapan.csv") %>%
     clean_names()
@@ -113,8 +138,9 @@ server <- function(input, output, session) {
   
   output$negaraAsalSBP2022 <- renderPlotly({
     
-    plot_ly(negaraAsal, labels = ~ negara_asal, values = ~n, type = "pie") %>%
+    plot_ly(negaraAsal, textinfo = "none", labels = ~ negara_asal, values = ~n, type = "pie") %>%
       layout(title = 'Negara asal paket yang ditegah',
+             showlegends = FALSE,
              xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
              yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
   })
@@ -129,8 +155,9 @@ server <- function(input, output, session) {
   ###MEMBUAT TABEL PIE CHART BY KATEGORI
   output$kategoriSBP2022 <- renderPlotly({
     
-    plot_ly(kategoriSBP, labels = ~ kategori, values = ~n, type = "pie") %>%
+    plot_ly(kategoriSBP, textinfo = "none", labels = ~ kategori, values = ~n, type = "pie") %>%
       layout(title = 'Kategori paket yang ditegah',
+             showlegend = FALSE,
              xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
              yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
   
@@ -170,12 +197,13 @@ server <- function(input, output, session) {
   
   ##line chart bongkaran
   
-  volumeBongkar <-  aggregate(list(jumlahKoli=dataBongkar$total, berat=dataBongkar$berat), by=dataBongkar["tanggal_ba_buka_segel"], sum)
+  volumeBongkar <- aggregate(list(jumlahkoli=dataBongkar$total, x_berat=dataBongkar$x_berat), by=dataBongkar["tanggal_ba_buka_segel"], sum)
   
+  #
   output$volumeBongkaran <- renderPlotly({
     plot_ly(volumeBongkar, x = ~ tanggal_ba_buka_segel) %>%
-      add_trace(y= ~jumlahKoli, name = 'Jumlah Koli', type = 'scatter', mode = 'lines', line = list(color = 'rgb(124, 252, 0)')) %>%
-      add_trace(y= ~berat, name = 'Berat Paket (Kg)', type = 'scatter', mode = 'lines', line = list(color = 'rgb(255, 0, 0)')) %>%
+      add_trace(y= ~jumlahkoli, name = 'Jumlah Koli', type = 'scatter', mode = 'lines', line = list(color = 'rgb(124, 252, 0)')) %>%
+      add_trace(y= ~x_berat, name = 'Berat Paket (Kg)', type = 'scatter', mode = 'lines', line = list(color = 'rgb(255, 0, 0)')) %>%
       layout(title='Berita Acara Bongkar',
              xaxis = list(title = "Tanggal", rangeslider = list(visible = T),
                           rangeselector=list(
@@ -193,8 +221,8 @@ server <- function(input, output, session) {
   ## grafik jumlah asal  truk
   
   jml_bkr_asal <- dataBongkar %>%
-    count(asal, tanggal_ba_buka_segel) %>%
-    pivot_wider(names_from = asal, values_from = n) %>%
+    count(x_asal, tanggal_ba_buka_segel) %>%
+    pivot_wider(names_from = x_asal, values_from = n) %>%
     arrange(tanggal_ba_buka_segel)
   
   jml_bkr_asal[is.na(jml_bkr_asal)] = 0

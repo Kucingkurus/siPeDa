@@ -5,10 +5,10 @@ account: inovasi
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7226370
-bundleId: 6378769
+bundleId: 6386415
 url: https://inovasi.shinyapps.io/siPeDa/
-when: 1665132469.25913
-lastSyncTime: 1665132469.25915
+when: 1665376435.41896
+lastSyncTime: 1665376435.41897
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: example/punya_nanda.R|UntitledR.R

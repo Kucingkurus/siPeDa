@@ -31,9 +31,9 @@ ui <- dashboardPage(
     sidebarMenu(id = "sidebar",
     menuItem("Dashboard P2", tabName = "dashboardP2", icon = icon("archway",lib = "font-awesome")),
     menuItem("Detail", tabName = "detail", icon=icon("database"),
-      menuItem("SBP 2021", tabName = "tabelSBP2021",icon=icon("users")),
+     #menuItem("SBP 2021", tabName = "tabelSBP2021",icon=icon("users")),
       menuItem("SBP 2022", tabName = "tabelSBP2022", icon = icon("users")),
-      menuItem("Penjaluran", tabName = "penjaluran", icon = icon("code-branch")),
+     #menuItem("Penjaluran", tabName = "penjaluran", icon = icon("code-branch")),
       menuItem("Bongkaran", tabName = "bongkaran",icon = icon("box-open"))
       )
     )
@@ -43,11 +43,14 @@ ui <- dashboardPage(
       ##dashboard utama
       tabItem(tabName = "dashboardP2",
               fluidRow(
+                
                ## box(title = strong("Dashboard Penindakan dan Penyidikan 2022"), status = "info", strong("kucingkurusmandi"), p("di papan"), width = 12),
+                
                 ### laporan Bongkar
                 box(title = strong("Laporan Bongkar"), status = "info", width = 12),
                 box(title =  "BA Bongkaran", status = "info", width = 12, plotlyOutput("volumeBongkaran")),
                 box(title = "keterangan", status = "info", width = 12, strong("asal"),plotlyOutput("render_jml_bkr_asal")),
+                
                 
                 ##box(title = "datarange tanggal tes", status = "info", width = 3, dateRangeInput("dateRange1", "tanggal:",
                 ##                                                                              start = Sys.Date(),
@@ -58,25 +61,33 @@ ui <- dashboardPage(
                 ##                                                                              separator = "-")),
                 
                 ### Laporan SBP
-                box(title = strong("Jumlah SBP"), status = "info", width = 12),
+                box(title = strong("Laporan SBP"), status = "info", width = 12),
                 box(title = "SBP 2022", status = "primary", width = 6, plotlyOutput("negaraAsalSBP2022")),
                 box(title = "SBP by kategori", status = "primary", width = 6, plotlyOutput("kategoriSBP2022")),
-                box(title = "jumlah SBP", status = "info", width = 3, strong("NON NPP"), valueBoxOutput("jml_sbp_non"), strong("NPP"), valueBoxOutput("jml_sbp_npp")),
+                box(title = "jumlah SBP", status = "info", width = 6, strong("NON NPP"), valueBoxOutput("jml_sbp_non"), strong("NPP"), valueBoxOutput("jml_sbp_npp")),
                 
                 ### laporan pemeriksaan
-                box(title = strong("Laporan Pemeriksaan"), status = "info", width = 12),
-                box(title = "penjaluran", status = "success", width = 6, plotlyOutput("progresPenjaluran")),
+                #box(title = strong("Laporan Pemeriksaan"), status = "info", width = 12),
+                #box(title = "penjaluran", status = "success", width = 6, plotlyOutput("progresPenjaluran")),
+                
+                
                 ### laporan pengajuan LAb
-                box(title = strong("Laporan Pengajuan lab"), status = "info", width = 12)
+                #box(title = strong("Laporan Pengajuan lab"), status = "info", width = 12)
                 
               )),
+      
       tabItem(tabName = "tabelSBP2022",
             fluidRow(
-              box(title = strong("Dashboard SBP 2021"), status = "info", width = 12),
-              box(title = "Dashboard", width = 12, plotlyOutput("dbsbp2021")),
+              #box(title = strong("Dashboard SBP 2021"), status = "info", width = 12),
+              #box(title = "Dashboard", width = 12, plotlyOutput("dbsbp2021")),
               box(title = "Tabel", width =12, dataTableOutput("tabelSBP2022"))
               )
-            )
+            ),
+      
+      tabItem(tabName = "bongkaran",
+               fluidRow(
+                 box(title = "tabel bongkaran", width= 12, dataTableOutput(("tabelBongkaran")))
+               ))
     )
   )
 )
@@ -99,6 +110,7 @@ server <- function(input, output, session) {
   ### load data sbp dari server sql
   sbp2022 <- dbReadTable(con, "SBP_2022") %>%
     clean_names()
+  
   ### laod data bongkaran dari server sql
   dataBongkar <- dbReadTable(con, "ba_bongkar") %>%
     clean_names() %>%
@@ -125,6 +137,10 @@ server <- function(input, output, session) {
   #panggil data sbp untuk menjadi tabel 
   
   output$tabelSBP2022 <- renderDataTable({sbp2022})
+  
+  #panggil data bongkaran untuk menjadi tabel
+  
+  output$tabelBongkaran <- renderDataTable({dataBongkar})
   
   ##PIE CHART SBP BY NEGARA ASAL
   
@@ -162,6 +178,7 @@ server <- function(input, output, session) {
              yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
   
   })
+  
   #line chart penjaluran
   
   output$progresPenjaluran <- renderPlotly({

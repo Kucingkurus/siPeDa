@@ -21,7 +21,7 @@ library(shinyWidgets)
 library(ggnewscale)
 library(RMySQL)
 library(DBI)
-library(RODBC)
+#library(RODBC)
 
 
 
@@ -65,13 +65,23 @@ con = dbConnect(RMySQL::MySQL(),
 
 sbp2022 <- dbReadTable(con, "SBP_2022")
 
-dataBongkar <- dbReadTable(con, "ba_bongkar") %>%
-  clean_names() %>%
-  mutate(tanggal_ba_buka_segel = as.Date(tanggal_ba_buka_segel)) %>%
-  mutate(x_berat = as.numeric(x_berat)) %>%
-  mutate(total = as.integer(total))
+#rekayasa data bongkar dari 2 tabel berbeda menggunakan dplyr
 
-volumebongkar <- aggregate(list(jumlahkoli=dataBongkar$total, berat=dataBongkar$x_berat), by=dataBongkar["tanggal_ba_buka_segel"], sum)
+dataBongkar <- dbReadTable(con, "bongkar") %>%
+  mutate(tgl_ba = as.Date(tgl_ba))
+
+dataBongkar_r7 <- dbReadTable(con, "bongkar_r7")
+
+dataBongkar_gab <- dataBongkar %>%
+  inner_join(dataBongkar_r7, by = c("no_ba"))
+
+agregat_koli <- aggregate(list(jumlahkoli=dataBongkar_gab$koli), by=dataBongkar_gab["tgl_ba"], sum)
+agregat_berat <- aggregate(list(berat=dataBongkar$berat), by=dataBongkar["tgl_ba"], sum)
+
+volumeBongkar <- agregat_koli %>%
+  inner_join(agregat_berat, by = c("tgl_ba"))
+
+##volumebongkar <- aggregate(list(jumlahkoli=dataBongkar_gab$koli, berat=dataBongkar_gab$berat), by=dataBongkar_gab["tgl_ba"], sum)
 
 
 negaraAsal <- sbp2022 %>%
@@ -92,9 +102,9 @@ data <- data.frame(x, random_y)
 ##jumlah asal  truk
 
 jml_bkr_asal_raw <- dataBongkar %>%
-  count(asal, tanggal_ba_buka_segel) %>%
+  count(asal, tgl_ba) %>%
   pivot_wider(names_from = asal, values_from = n) %>%
-  arrange(tanggal_ba_buka_segel)
+  arrange(tgl_ba)
   
   jml_bkr_asal_raw[is.na(jml_bkr_asal_raw)] = 0
 

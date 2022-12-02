@@ -31,10 +31,10 @@ ui <- dashboardPage(
     sidebarMenu(id = "sidebar",
     menuItem("Dashboard P2", tabName = "dashboardP2", icon = icon("archway",lib = "font-awesome")),
     menuItem("Detail", tabName = "detail", icon=icon("database"),
-     #menuItem("SBP 2021", tabName = "tabelSBP2021",icon=icon("users")),
+      menuItem("kucingkurus", icon=icon("users"), href = "http://www.p2pasbar.store/siPeDa/src/"),
       menuItem("SBP 2022", tabName = "tabelSBP2022", icon = icon("users")),
      #menuItem("Penjaluran", tabName = "penjaluran", icon = icon("code-branch")),
-      menuItem("Bongkaran", tabName = "bongkaran",icon = icon("box-open"))
+      menuItem("Bongkaran", tabName = "bongkaran", icon = icon("box-open"))
       )
     )
   ),
@@ -112,26 +112,31 @@ server <- function(input, output, session) {
     clean_names()
   
   ### laod data bongkaran dari server sql
-  dataBongkar <- dbReadTable(con, "ba_bongkar") %>%
-    clean_names() %>%
-    mutate(tanggal_ba_buka_segel = as.Date(tanggal_ba_buka_segel)) %>%
-    mutate(x_berat = as.numeric(x_berat)) %>%
-    mutate(total = as.integer(total))
+  ####rekayasa data bongkar dari 2 tabel berbeda menggunakan dplyr
+  
+  dataBongkar <- dbReadTable(con, "bongkar") %>%
+    mutate(tgl_ba = as.Date(tgl_ba))
+  
+  dataBongkar_r7 <- dbReadTable(con, "bongkar_r7")
+  
+  dataBongkar_gab <- dataBongkar %>%
+    inner_join(dataBongkar_r7, by = c("no_ba"))
+  
   
   ##Load data CSV
   
- # sbp2022 <- read.csv2("databases/SBP_2022.csv") %>%
+ # sbp2022 <- read.csv2("src/databases/SBP_2022.csv") %>%
    # clean_names()
   
-  penjaluran <- read.csv2("databases/jumlah_penjaluran.csv") %>%
+  penjaluran <- read.csv2("src/databases/jumlah_penjaluran.csv") %>%
     clean_names()
   
-#dataBongkar <- read.csv2("databases/ba_bongkar.csv") %>%
+#dataBongkar <- read.csv2("src/databases/ba_bongkar.csv") %>%
  #   clean_names() %>%
   #  mutate(tanggal_ba_buka_segel = as.Date(tanggal_ba_buka_segel)) %>%
    # mutate(berat = as.integer(berat))
   
-  dataTangkapan <- read.csv2("databases/data_tangkapan.csv") %>%
+  dataTangkapan <- read.csv2("src/databases/data_tangkapan.csv") %>%
     clean_names()
 
   #panggil data sbp untuk menjadi tabel 
@@ -211,16 +216,19 @@ server <- function(input, output, session) {
   })
   
   # laporan bongkar
-  
   ##line chart bongkaran
   
-  volumeBongkar <- aggregate(list(jumlahkoli=dataBongkar$total, x_berat=dataBongkar$x_berat), by=dataBongkar["tanggal_ba_buka_segel"], sum)
+  agregat_koli <- aggregate(list(jumlahkoli=dataBongkar_gab$koli), by=dataBongkar_gab["tgl_ba"], sum)
+  agregat_berat <- aggregate(list(berat=dataBongkar$berat), by=dataBongkar["tgl_ba"], sum)
+  
+  volumeBongkar <- agregat_koli %>%
+    inner_join(agregat_berat, by = c("tgl_ba"))
   
   #
   output$volumeBongkaran <- renderPlotly({
-    plot_ly(volumeBongkar, x = ~ tanggal_ba_buka_segel) %>%
+    plot_ly(volumeBongkar, x = ~ tgl_ba) %>%
       add_trace(y= ~jumlahkoli, name = 'Jumlah Koli', type = 'scatter', mode = 'lines', line = list(color = 'rgb(124, 252, 0)')) %>%
-      add_trace(y= ~x_berat, name = 'Berat Paket (Kg)', type = 'scatter', mode = 'lines', line = list(color = 'rgb(255, 0, 0)')) %>%
+      add_trace(y= ~berat, name = 'Berat Paket (Kg)', type = 'scatter', mode = 'lines', line = list(color = 'rgb(255, 0, 0)')) %>%
       layout(title='Berita Acara Bongkar',
              xaxis = list(title = "Tanggal", rangeslider = list(visible = T),
                           rangeselector=list(
@@ -238,17 +246,17 @@ server <- function(input, output, session) {
   ## grafik jumlah asal  truk
   
   jml_bkr_asal <- dataBongkar %>%
-    count(x_asal, tanggal_ba_buka_segel) %>%
-    pivot_wider(names_from = x_asal, values_from = n) %>%
-    arrange(tanggal_ba_buka_segel)
+    count(asal, tgl_ba) %>%
+    pivot_wider(names_from = asal, values_from = n) %>%
+    arrange(tgl_ba)
   
   jml_bkr_asal[is.na(jml_bkr_asal)] = 0
   
   output$render_jml_bkr_asal <- renderPlotly({
-    plot_ly(jml_bkr_asal, x = ~ tanggal_ba_buka_segel) %>%
-      add_trace(y= ~` SH `, name = 'Soekarno-Hatta', type = 'scatter', mode = 'lines', line = list(color = 'rgb(0, 0, 255)')) %>%
-      add_trace(y= ~` PRIOK `, name = 'Tanjung Priok', type = 'scatter', mode = 'lines', line = list(color = 'rgb(255, 0, 0)')) %>%
-      add_trace(y= ~` SH (ECOMMERCE) `, name = 'E-Commerce', type = 'scatter', mode = 'lines', line = list(color = 'rgb(0, 255, 0)')) %>%
+    plot_ly(jml_bkr_asal, x = ~ tgl_ba) %>%
+      add_trace(y= ~ SH, name = 'Soekarno-Hatta', type = 'scatter', mode = 'lines', line = list(color = 'rgb(0, 0, 255)')) %>%
+      add_trace(y= ~ PRIOK, name = 'Tanjung Priok', type = 'scatter', mode = 'lines', line = list(color = 'rgb(255, 0, 0)')) %>%
+      add_trace(y= ~ `E-COMMERCE`, name = 'E-Commerce', type = 'scatter', mode = 'lines', line = list(color = 'rgb(0, 255, 0)')) %>%
       layout(title='Berita Acara Bongkar',
              xaxis = list(title = "Tanggal", rangeslider = list(visible = T),
                           rangeselector=list(

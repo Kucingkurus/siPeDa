@@ -35,7 +35,7 @@ killDbConnections <- function () {
     +  dbDisconnect(con)
   
   print(paste(length(all_cons), " connections killed."))
-  
+    
 }
 
 sqlQuery <- function (query) {
@@ -65,6 +65,40 @@ con = dbConnect(RMySQL::MySQL(),
 
 sbp2022 <- dbReadTable(con, "SBP_2022")
 
+#ambil data penjaluran
+dataPenjaluran <- dbReadTable(con, "Penjaluran") 
+
+##olah data penjaluran 
+penjaluran <- dataPenjaluran %>%
+  mutate(Tanggal = as.Date(Tanggal)) %>%
+  group_by(Jalur,Tanggal) %>%
+  count() %>%
+  drop_na()
+
+penjaluran_bulanan <- penjaluran %>%
+  group_by(bulan = lubridate::floor_date(Tanggal, 'month'), Jalur) %>%
+  summarize(jumlah_jalur = max(n))
+
+
+#######
+df <- data.frame(Tanggal=as.Date(c('1/4/2022', '1/9/2022', '2/10/2022', '2/15/2022',
+                                '3/5/2022', '3/22/2022', '3/27/2022'), '%m/%d/%Y'),
+                 n=c(8, 14, 22, 23, 16, 17, 23))
+
+df_cal<- df %>% 
+  group_by(bulan = lubridate::floor_date(Tanggal, 'month')) %>%
+  summarize(sumsales = sum(n))
+
+
+
+######
+
+
+
+
+
+
+
 #rekayasa data bongkar dari 2 tabel berbeda menggunakan dplyr
 
 dataBongkar <- dbReadTable(con, "bongkar") %>%
@@ -82,6 +116,9 @@ volumeBongkar <- agregat_koli %>%
   inner_join(agregat_berat, by = c("tgl_ba"))
 
 ##volumebongkar <- aggregate(list(jumlahkoli=dataBongkar_gab$koli, berat=dataBongkar_gab$berat), by=dataBongkar_gab["tgl_ba"], sum)
+
+## ambil data penjaluran
+
 
 
 negaraAsal <- sbp2022 %>%

@@ -66,9 +66,9 @@ ui <- dashboardPage(
                 box(title = "SBP by kategori", status = "primary", width = 6, plotlyOutput("kategoriSBP2022")),
                 box(title = "jumlah SBP", status = "info", width = 6, strong("NON NPP"), valueBoxOutput("jml_sbp_non"), strong("NPP"), valueBoxOutput("jml_sbp_npp")),
                 
-                ### laporan pemeriksaan
-                #box(title = strong("Laporan Pemeriksaan"), status = "info", width = 12),
-                #box(title = "penjaluran", status = "success", width = 6, plotlyOutput("progresPenjaluran")),
+                ###laporan pemeriksaan
+                box(title = strong("Laporan Pemeriksaan"), status = "info", width = 12),
+                box(title = "penjaluran", status = "success", width = 6, plotlyOutput("penjaluran_bulanan")),
                 
                 
                 ### laporan pengajuan LAb
@@ -138,7 +138,7 @@ server <- function(input, output, session) {
   
   dataTangkapan <- read.csv2("src/databases/data_tangkapan.csv") %>%
     clean_names()
-
+  
   #panggil data sbp untuk menjadi tabel 
   
   output$tabelSBP2022 <- renderDataTable({sbp2022})
@@ -270,6 +270,22 @@ server <- function(input, output, session) {
              yaxis = list(title = "Jumlah Truk"))
   })
   
+  ##grafik penjaluran
+  ###olah data penjaluran 
+  penjaluran <- dataPenjaluran %>%
+    mutate(Tanggal = as.Date(Tanggal)) %>%
+    group_by(Jalur,Tanggal) %>%
+    count() %>%
+    drop_na()
+  
+  penjaluran_bulanan <- penjaluran %>%
+    group_by(bulan = lubridate::floor_date(Tanggal, 'month'), Jalur) %>%
+    summarize(jumlah_jalur = max(n))
+  ###bar chart penjaluran
+  output$penjaluran_bulanan <- renderPlotly({
+    plot_ly(penjaluran_bulanan, x = ~bulan$Hijau, y = ~jumlah_jalur, type = 'bar', name = 'Primary Product', marker = list(color = 'rgb(49,130,189)'))
+    
+  })
   
 }
 

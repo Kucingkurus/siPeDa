@@ -283,7 +283,7 @@ server <- function(input, output, session) {
     summarize(jumlah_jalur = max(n))
   ###bar chart penjaluran
   output$penjaluran_bulanan <- renderPlotly({
-    plot_ly(penjaluran_bulanan, x = ~bulan$Hijau, y = ~jumlah_jalur, type = 'bar', name = 'Primary Product', marker = list(color = 'rgb(49,130,189)'))
+    plot_ly(penjaluran_bulanan, x = ~bulan, y = ~jumlah_jalur, type = 'bar', name = 'Primary Product', marker = list(color = 'rgb(49,130,189)'))
     
   })
   

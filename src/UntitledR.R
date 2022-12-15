@@ -79,23 +79,20 @@ penjaluran_bulanan <- penjaluran %>%
   group_by(bulan = lubridate::floor_date(Tanggal, 'month'), Jalur) %>%
   summarize(jumlah_jalur = max(n))
 
+penjaluran_bulanan_widen <- penjaluran_bulanan %>%
+  pivot_wider(names_from = Jalur, values_from = jumlah_jalur) %>%
+  arrange(bulan)
 
-#######
-df <- data.frame(Tanggal=as.Date(c('1/4/2022', '1/9/2022', '2/10/2022', '2/15/2022',
-                                '3/5/2022', '3/22/2022', '3/27/2022'), '%m/%d/%Y'),
-                 n=c(8, 14, 22, 23, 16, 17, 23))
+penjaluran_widen <- penjaluran %>%
+  pivot_wider(names_from = Jalur, values_from = n) %>%
+  arrange(Tanggal)
 
-df_cal<- df %>% 
-  group_by(bulan = lubridate::floor_date(Tanggal, 'month')) %>%
-  summarize(sumsales = sum(n))
+#jml_bkr_asal_raw <- dataBongkar %>%
+#  count(asal, tgl_ba) %>%
+ # pivot_wider(names_from = asal, values_from = n) %>%
+  #arrange(tgl_ba)
 
-
-
-######
-
-
-
-
+#jml_bkr_asal_raw[is.na(jml_bkr_asal_raw)] = 0
 
 
 

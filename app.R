@@ -60,18 +60,18 @@ ui <- dashboardPage(
                 ##                                                                              format = "yyyy-mm-dd",
                 ##                                                                              separator = "-")),
                 
+                ###laporan pemeriksaan
+                box(title = strong("Laporan Pemeriksaan"), status = "info", width = 12),
+                box(title = "penjaluran", status = "success", width = 12, plotlyOutput("penjaluran_bulanan")),
+                
                 ### Laporan SBP
                 box(title = strong("Laporan SBP"), status = "info", width = 12),
                 box(title = "SBP 2022", status = "primary", width = 6, plotlyOutput("negaraAsalSBP2022")),
                 box(title = "SBP by kategori", status = "primary", width = 6, plotlyOutput("kategoriSBP2022")),
                 box(title = "jumlah SBP", status = "info", width = 6, strong("NON NPP"), valueBoxOutput("jml_sbp_non"), strong("NPP"), valueBoxOutput("jml_sbp_npp")),
                 
-                ###laporan pemeriksaan
-                box(title = strong("Laporan Pemeriksaan"), status = "info", width = 12),
-                box(title = "penjaluran", status = "success", width = 6, plotlyOutput("penjaluran_bulanan")),
-                
-                
-                ### laporan pengajuan LAb
+
+                ### laporan pengajuan Lab
                 #box(title = strong("Laporan Pengajuan lab"), status = "info", width = 12)
                 
               )),
@@ -281,9 +281,24 @@ server <- function(input, output, session) {
   penjaluran_bulanan <- penjaluran %>%
     group_by(bulan = lubridate::floor_date(Tanggal, 'month'), Jalur) %>%
     summarize(jumlah_jalur = max(n))
-  ###bar chart penjaluran
+  
+ # penjaluran_bulanan_widen <- penjaluran_bulanan %>%
+   # pivot_wider(names_from = Jalur, values_from = jumlah_jalur) %>%
+    #arrange(bulan)
+  
+  penjaluran_widen <- penjaluran %>%
+    pivot_wider(names_from = Jalur, values_from = n) %>%
+    arrange(Tanggal)
+  
+  ### plotly bar chart penjaluran 
   output$penjaluran_bulanan <- renderPlotly({
-    plot_ly(penjaluran_bulanan, x = ~bulan, y = ~jumlah_jalur, type = 'bar', name = 'Primary Product', marker = list(color = 'rgb(49,130,189)'))
+    plot_ly(penjaluran_widen, x = ~Tanggal, y = ~Hijau, type = 'bar', name = 'Hijau', marker = list(color = 'rgb(44,255,44)')) %>%
+      add_trace(y = ~Merah, name = 'Merah', marker = list(color = 'rgb(255,44,44)')) %>%
+      layout(xaxis = list(title = "Periode", tickangle = -45 , tickformat="%d %B %Y"),
+             yaxis = list(title = "Jalur"),
+             margin = list(b = 100),
+             barmode = 'group')
+    
     
   })
   

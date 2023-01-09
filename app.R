@@ -108,8 +108,15 @@ server <- function(input, output, session) {
                   password='Kuc1ngkuru5')
   
   ### load data sbp dari server sql
-  sbp2022 <- dbReadTable(con, "SBP_2022") %>%
+  sbp2022 <- dbReadTable(con, "sbp_2022") %>%
     clean_names()
+  kodenegara <- dbReadTable(con, "sbp_kodenegara")
+  detail_paket <- dbReadTable(con,  "detail_paket")
+  detail_sbp <- dbReadTable(con, "sbp_detail")
+  sbp_kategori <- dbReadTable(con, "sbp_kategori")
+  
+  #ambil data penjaluran
+  dataPenjaluran <- dbReadTable(con, "Penjaluran") 
   
   ### laod data bongkaran dari server sql
   ####rekayasa data bongkar dari 2 tabel berbeda menggunakan dplyr
@@ -150,8 +157,12 @@ server <- function(input, output, session) {
   ##PIE CHART SBP BY NEGARA ASAL
   
   ### mengambil data untuk pie-chart negara asal
-  negaraAsal <- sbp2022 %>%
-    group_by(negara_asal) %>%
+  sbp_join_detail_negara<- detail_paket %>%
+    left_join(kodenegara, by = c("kode_negara"))
+  
+  
+  negaraAsal <- sbp_join_detail_negara %>%
+    group_by(negara) %>%
     count() %>%
     drop_na()
   
@@ -159,7 +170,7 @@ server <- function(input, output, session) {
   
   output$negaraAsalSBP2022 <- renderPlotly({
     
-    plot_ly(negaraAsal, textinfo = "none", labels = ~ negara_asal, values = ~n, type = "pie") %>%
+    plot_ly(negaraAsal, textinfo = "none", labels = ~ negara, values = ~n, type = "pie") %>%
       layout(title = 'Negara asal paket yang ditegah',
              showlegends = FALSE,
              xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
@@ -168,15 +179,18 @@ server <- function(input, output, session) {
   
   ##PIE CHART SBP BY KATEGORI
   ###MENGAMBIL DATA SBP BY KATEGORI
-  kategoriSBP <- sbp2022 %>%
-    group_by(kategori) %>%
+  sbp_join_detail_kategori <- detail_sbp %>%
+    right_join(sbp_kategori, by = c("komoditi" = "no_komoditi"))
+  
+  kategoriSBP <- sbp_join_detail_kategori %>%
+    group_by(deskripsi_komoditi) %>%
     count() %>%
     drop_na()
   
   ###MEMBUAT TABEL PIE CHART BY KATEGORI
   output$kategoriSBP2022 <- renderPlotly({
     
-    plot_ly(kategoriSBP, textinfo = "none", labels = ~ kategori, values = ~n, type = "pie") %>%
+    plot_ly(kategoriSBP, textinfo = "none", labels = ~ deskripsi_komoditi, values = ~n, type = "pie") %>%
       layout(title = 'Kategori paket yang ditegah',
              showlegend = FALSE,
              xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
@@ -194,7 +208,7 @@ server <- function(input, output, session) {
   # value total SBP
   
   jml_sbp_non_val <- sbp2022 %>% 
-    drop_na(no_kiriman) %>%
+    drop_na(no_dok) %>%
     nrow() %>%
     as.numeric()
   
@@ -298,7 +312,6 @@ server <- function(input, output, session) {
              yaxis = list(title = "Jalur"),
              margin = list(b = 100),
              barmode = 'group')
-    
     
   })
   

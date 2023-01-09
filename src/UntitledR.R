@@ -63,7 +63,11 @@ con = dbConnect(RMySQL::MySQL(),
                 user='kucingkurus',
                 password='Kuc1ngkuru5')
 
-sbp2022 <- dbReadTable(con, "SBP_2022")
+sbp2022 <- dbReadTable(con, "sbp_2022")
+kodenegara <- dbReadTable(con, "sbp_kodenegara")
+detail_paket <- dbReadTable(con,  "detail_paket")
+detail_sbp <- dbReadTable(con, "sbp_detail")
+sbp_kategori <- dbReadTable(con, "sbp_kategori")
 
 #ambil data penjaluran
 dataPenjaluran <- dbReadTable(con, "Penjaluran") 
@@ -117,11 +121,27 @@ volumeBongkar <- agregat_koli %>%
 ## ambil data penjaluran
 
 
+sbp_join_detail_negara<- detail_paket %>%
+  left_join(kodenegara, by = c("kode_negara"))
 
-negaraAsal <- sbp2022 %>%
-  group_by(negara_asal) %>%
+
+negaraAsal <- sbp_join_detail_negara %>%
+  group_by(negara) %>%
   count() %>%
   drop_na()
+
+
+#sbp kategori
+
+sbp_join_detail_kategori <- detail_sbp %>%
+  right_join(sbp_kategori, by = c("komoditi" = "no_komoditi"))
+
+kategoriSBP <- sbp_join_detail_kategori %>%
+  group_by(deskripsi_komoditi) %>%
+  count() %>%
+  drop_na()
+
+
 
 jml_sbp_npp <- dataTangkapan %>%
   drop_na(no_sbp) %>%

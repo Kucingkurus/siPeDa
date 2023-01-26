@@ -172,7 +172,7 @@ server <- function(input, output, session) {
     
     plot_ly(negaraAsal, textinfo = "none", labels = ~ negara, values = ~n, type = "pie") %>%
       layout(title = 'Negara asal paket yang ditegah',
-             showlegends = FALSE,
+             showlegend = FALSE,
              xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
              yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
   })
